@@ -1,0 +1,4 @@
+SHDWA = "SHADOW2"
+{
+ scale = 0.8
+}

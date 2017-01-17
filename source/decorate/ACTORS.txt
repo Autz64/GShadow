@@ -1,0 +1,223 @@
+//=================================================================
+// DOOM/2 Light sources
+
+actor NewColumn: Column replaces Column
+{
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowTarget",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto spawn2
+  
+  spawn2:
+   COLU A -1 BRIGHT
+  stop
+ }
+}
+
+actor NewTechLamp2: TechLamp2 replaces TechLamp2
+{
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowTarget",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto spawn2
+  
+  spawn2:
+   TLP2 ABCD 4 BRIGHT
+  Loop
+ }
+}
+
+actor NewTechLamp: TechLamp replaces TechLamp
+{
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowTarget",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto spawn2
+  
+  spawn2:
+   TLMP ABCD 4 BRIGHT
+  Loop
+ }
+}
+
+
+actor NewGreenTorch: GreenTorch replaces GreenTorch
+{
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowTarget",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto spawn2
+  
+  spawn2:
+   TGRN ABCD 4 BRIGHT
+  Loop
+ }
+}
+
+
+actor NewRedTorch: RedTorch replaces RedTorch
+{
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowTarget",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto spawn2
+  
+  spawn2:
+   TRED ABCD 4 BRIGHT
+  Loop
+ }
+}
+
+
+actor NewBlueTorch: BlueTorch replaces BlueTorch
+{
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowTarget",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto spawn2
+  
+  spawn2:
+   TBLU ABCD 4 BRIGHT
+  Loop
+ }
+}
+
+
+actor NewShortBlueTorch: ShortBlueTorch replaces ShortBlueTorch
+{
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowTarget",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto spawn2
+  
+  spawn2:
+   SMBT ABCD 4 BRIGHT
+  Loop
+ }
+}
+
+
+actor NewShortGreenTorch: ShortGreenTorch replaces ShortGreenTorch
+{
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowTarget",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto spawn2
+  
+  spawn2:
+   SMGT ABCD 4 BRIGHT
+  Loop
+ }
+}
+
+
+actor NewShortRedTorch: ShortRedTorch replaces ShortRedTorch
+{
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowTarget",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto spawn2
+  
+  spawn2:
+   SMRT ABCD 4 BRIGHT
+  Loop
+ }
+}
+
+
+
+//============================================================
+//Monsters
+
+actor GZombie: Zombieman replaces Zombieman
+{
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowContainer",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto GSpawn
+  
+  GSpawn:
+    POSS AB 10 A_Look
+    Loop
+ }
+}
+
+actor GShotgunGuy: ShotgunGuy replaces ShotgunGuy
+{
+ states
+ {
+  spawn:
+   TNT1 A 0 
+   TNT1 A 0 A_SpawnItemEx("ShadowContainer",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto GSpawn
+  
+  GSpawn:
+   SPOS AB 10 A_Look
+  Loop
+ }
+}
+
+actor GChaingunGuy: ChaingunGuy replaces ChaingunGuy
+{
+ states
+ {
+  spawn:
+   TNT1 A 0 
+   TNT1 A 0 A_SpawnItemEx("ShadowContainer",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto GSpawn
+  
+  GSpawn:
+   CPOS AB 10 A_Look
+  Loop
+ }
+}
+
+actor GDoomImp: DoomImp replaces DoomImp
+{
+ states
+ {
+  spawn:
+   TNT1 A 0 
+   TNT1 A 0 A_SpawnItemEx("ShadowContainer",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto GSpawn
+  
+  GSpawn:
+   TROO AB 10 A_Look
+  Loop
+ }
+}
+
+actor GDemon: Demon replaces Demon
+{
+ states
+ {
+  spawn:
+   TNT1 A 0 
+   TNT1 A 0 A_SpawnItemEx("ShadowContainer",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+  goto GSpawn
+  
+  GSpawn:
+   SARG AB 10 A_Look
+  Loop
+ }
+}

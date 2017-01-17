@@ -1,0 +1,274 @@
+//=================================================================
+//                         SHADOW CASTING
+//            Dynamic shadows for both Software and Hardware!
+//=================================================================
+/* 
+ The logic here is way more complicated that i initially though.
+ I'm not good with explanations, so take a time to spare me and 
+ read how this works. I come with this idea by realizing that by 
+ doing constant calls to A_FaceTarget, the affected actor will 
+ change his angle in the same way a shadow does from a lightsource.
+ 
+ Here's the technical explanation:
+ 
+ Every 'Lightsource' (ShadowTargets) has a unique TID >= 7000
+ for the sake of having a difference between them. These
+ ShadowTargets serve as an indicator for the ShadowActors to
+ constantly face them and thus, changing their angles, simulating
+ shadow responsiveness.
+ 
+ Let's suppose that on a custom map, there's:
+ 4 ShadowTargets
+ 2 ShadowContainers (Spawned by 2 solid actors. 1 Actor = 1 ShadowContainer)
+ 1 ShadowBrain
+ 
+ What will happend is that the ShadowBrain (as explained on 
+ ShadowBrain actor) will assing to each ShadowContainer a ShadowActor
+ who responds ONLY for the specified target.
+
+ For example:
+ 
+ For the ShadowTarget which TID is 7001, the ShadowBrain will 'spawn'
+ on both ShadowContainer (N.1 and N.2) a ShadowActor who only respond
+ to the ShadowTarget which TID is 7001. Which means that both N.1 and
+ N.2 will have a single shadow who only reacts to TID 7001,
+ REGARDLESS OF THE DISTANCE BETWEEN THEM.
+ 
+ If you guessed right, you will notice that having a lot of 
+ ShadowTargets and a lot of ShadowContainers will slow down
+ things.
+*/
+
+
+
+
+
+
+//=================================================================
+//                         SHADOW ITEM
+//=================================================================
+/* 
+ This actor is used as a signal for ShadowAgent to spawn ShadowActors
+ 
+ Yes, i'm lazy to come up with something better
+*/
+actor ShadowItem: Inventory {inventory.maxamount 1}
+
+
+
+//=================================================================
+//                         SHADOW TARGET
+//=================================================================
+/* 
+ This actor is the main pillar of the Shadow Casting, because actors
+ can't hate non-hateable actors (mostly decorations).
+ 
+ Every light source to 'cast' a shadow MUST spawn this actor using
+ this:
+ 
+ A_SpawnItemEx("ShadowTarget",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+ 
+ I added a DoomEdNum so you can place a ShadowTarget without need 
+ of light actors.
+*/
+actor ShadowTarget : HateTarget 18010
+{
+ +NOINTERACTION
+ states
+ {
+  spawn:
+   TNT1 A 0
+   TNT1 A 0 ACS_NamedExecuteAlways("ChangeTID")
+  goto tloop
+  
+  TLoop:
+   TNT1 A 1 A_Warp(AAPTR_MASTER, 0, 0, 0, 0, WARPF_NOCHECKPOSITION|WARPF_INTERPOLATE)
+  loop
+ }
+}
+
+//=================================================================
+//                         SHADOW BRAIN
+//=================================================================
+/* 
+ This actor is the 'Brain' of the Shadow casting, since it manages
+ the shadow spawning and the relation between ShadowActors and 
+ ShadowTargets. Mainly to avoid spawning more shadows than needed. 
+ 
+ Also, when editing, is highly recommendable to have only
+             1 ShadowBrain PER MAP
+ Spawning more than 1 ShadowBrain will result on more shadows being
+ rendered, and thus, slowing down G/ZDoom.
+*/
+actor ShadowBrain 18011
+{ 
+ var int user_TID;
+ var int user_PTotal;
+ var int user_PCount;
+ 
+ +NOINTERACTION
+ states
+ {
+  spawn:
+   TNT1 A 35
+   TNT1 A 0 A_SetUserVar(user_TID,7000)
+   TNT1 A 0 A_SetUserVar(user_PTotal,CallACS("TotalPointLights"))
+   TNT1 A 0 A_SetUserVar(user_PCount,0)
+  goto LoopCheck
+  
+  LoopCheck:
+   TNT1 A 0
+   TNT1 A 1 A_JumpIf(ACS_NamedExecuteWithResult("CheckTargetShadow",user_TID) == 1,"ShadowSpawn")
+   TNT1 A 0 A_JumpIf(user_PCount == user_PTotal, "End")
+   TNT1 A 0 A_SetUserVar(user_TID, user_TID+1)
+  loop 
+  
+  ShadowSpawn:
+   TNT1 A 0
+   TNT1 A 0 A_LogInt(user_TID)
+   TNT1 A 4 ACS_NamedExecuteAlways("SpawnSActor",0,user_TID)
+   TNT1 A 0 A_SetUserVar(user_PCount, user_PCount+1)
+   TNT1 A 0 A_SetUserVar(user_TID, user_TID+1)
+  goto LoopCheck
+  
+  End:
+   SPOS A 35
+  stop
+ }
+}
+
+//=================================================================
+//                         SHADOW CONTAINER
+//=================================================================
+/* 
+ This actor is the 'container' for the shadows. It follows the
+ actor who spawn him (his Master) and spawn ShadowActors if he
+ get a greenlight to do it (see: SHADOW ITEM). If his master dies
+ (if Master's SOLID flag changes),he and his shadows 'minions' dies.
+ 
+ Every actor that will have shadows MUST spawn this actor using
+ this:
+ 
+ A_SpawnItemEx("ShadowContainer",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+*/
+actor ShadowContainer : MapSpot
+{
+ states
+ {
+  spawn: 
+   TNT1 A 0
+   TNT1 A 0 ACS_NamedExecuteAlways("ShadowContainerTID")
+  goto NormalLoop
+  
+  NormalLoop:
+   TNT1 A 0 A_JumpIfInventory("ShadowItem",1,"SummonShadow")
+   TNT1 A 0 A_CheckFlag("SOLID", "Go", AAPTR_MASTER)
+  goto End
+  
+  Go:
+   TNT1 A 0 //A_GiveInventory("ShadowItem",1)
+   TNT1 A 1 A_Warp(AAPTR_MASTER, 0, 0, 0, 0, WARPF_TOFLOOR|WARPF_NOCHECKPOSITION|WARPF_INTERPOLATE)
+  goto NormalLoop
+  
+  SummonShadow:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowActor",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+   TNT1 A 1 A_TakeInventory("ShadowItem",1)
+  goto NormalLoop
+  
+  End:
+   TNT1 A 0
+   TNT1 A 0 A_ChangeFlag("NOINTERACTION",1)
+   TNT1 A 35
+  stop
+ }
+}
+
+
+//=================================================================
+//                         SHADOW ACTOR
+//=================================================================
+/* 
+ This actor is the shadow itself. It follows his master (ShadowContainer)
+ and changes his size and alpha based on the distance between him
+ and his target (ShadowTarget). If his master dies (if his master
+ suddently has a NOINTERACTION flag), he dies too.
+*/
+actor ShadowActor
+{
+ xscale 10.2
+ yscale 0.8
+ renderstyle translucent
+ alpha 0
+ +NOINTERACTION
+ states
+ {
+  spawn:
+   SHDW A 0
+   SHDW A 0 ACS_NamedExecuteAlways("GetShadowTarget",0)
+  goto CheckP
+  
+  CheckP:
+   SHDW A 0
+   SHDW A 0 ACS_NamedExecuteAlways("SizeDIS")
+   SHDW A 0 A_CheckFlag("NOINTERACTION", "End", AAPTR_MASTER)
+  goto GoShadow
+   
+  GoShadow:
+   SHDW A 0 A_Warp(AAPTR_MASTER, 0, 0, 0, 0, WARPF_TOFLOOR|WARPF_NOCHECKPOSITION|WARPF_INTERPOLATE)
+  goto See
+  
+  End:
+   TNT1 A 0
+  stop
+  
+  See:
+   SHDW A 0
+   SHDW A 0 A_Chase
+   SHDW A 1 A_FaceTarget
+  goto CheckP
+ }
+}
+
+//=================================================================
+//                         SHADOW PLAYER
+//=================================================================
+/* 
+ Same as ShadowContainer, but it follows the player 1 straight-away
+ without need to modify the player actor.
+ 
+ If you're spawning this actor via Console, be sure to spawn the
+ ShadowBrain after, not before (First ShadowPlayer, then ShadowBrain)
+*/
+actor ShadowPlayer : MapSpot
+{
+ states
+ {
+  spawn: 
+   TNT1 A 0
+   TNT1 A 0 ACS_NamedExecuteAlways("ShadowContainerTID")
+  goto NormalLoop
+  
+  NormalLoop:
+   TNT1 A 0 A_JumpIfInventory("ShadowItem",1,"SummonShadow")
+   TNT1 A 0 A_CheckFlag("SOLID", "Go", AAPTR_PLAYER1)
+  goto End
+  
+  Go:
+   TNT1 A 0 //A_GiveInventory("ShadowItem",1)
+   TNT1 A 1 A_Warp(AAPTR_PLAYER1, 0, 0, 0, 0, WARPF_TOFLOOR|WARPF_NOCHECKPOSITION|WARPF_INTERPOLATE)
+  goto NormalLoop
+  
+  SummonShadow:
+   TNT1 A 0
+   TNT1 A 0 A_SpawnItemEx("ShadowActor",0,0,0,0,0,0,0,SXF_NOCHECKPOSITION|SXF_SETMASTER)
+   TNT1 A 1 A_TakeInventory("ShadowItem",1)
+  goto NormalLoop
+  
+  End:
+   TNT1 A 0
+   TNT1 A 0 A_ChangeFlag("NOINTERACTION",1)
+   TNT1 A 35
+  stop
+ }
+}

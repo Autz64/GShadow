@@ -1,0 +1,98 @@
+#include "zcommon.acs"
+
+global int 1: STarget;
+
+function int fdistance (int tid1,int tid2)
+{
+  int len;
+	int y = getactory(tid1) - getactory(tid2);
+	int x = getactorx(tid1) - getactorx(tid2);
+	int z = getactorz(tid1) - getactorz(tid2);
+
+	int ang = vectorangle(x,y);
+	if(((ang+0.125)%0.5) > 0.25) len = fixeddiv(y, sin(ang));
+	else len = fixeddiv(x, cos(ang));
+
+	ang = vectorangle(len, z);
+	if(((ang+0.125)%0.5) > 0.25) len = fixeddiv(z, sin(ang));
+	else len = fixeddiv(len, cos(ang));
+
+	return len / 10;
+}
+
+script "GetShadowTarget" (void)
+{
+ SetPointer(AAPTR_TARGET,STarget);
+}
+
+script "TotalPointLights" (void)
+{ 
+ int Total;
+ 
+ for(int PL=6999; PL < 9000; PL++)
+   {
+	if(IsTIDUsed(PL))
+     Total++;
+   }
+
+ SetResultValue(Total);
+}
+
+script "CheckTargetShadow" (int CID)
+{
+ SetResultValue(IsTIDUsed(CID));
+}
+
+script "SpawnSActor" (int TarTID)
+{
+ STarget=TarTID;
+ GiveActorInventory(9000,"ShadowItem",1);
+}
+
+script "sizeDIS" (void)
+{
+ int Dist,Target;
+ 
+ Target = GetActorProperty(0,APROP_TargetTID);
+ 
+ if(Target!=0)
+ { 
+  Dist = fdistance(0,Target);
+ 
+  if(Dist < 2000000)
+  {
+   if(Dist > 1900000)                   {SetActorProperty(0,APROP_Alpha,0.05);}
+   if(Dist > 1700000 && Dist < 1900000) {SetActorProperty(0,APROP_Alpha,0.1);}
+   if(Dist > 1500000 && Dist < 1700000) {SetActorProperty(0,APROP_Alpha,0.15);}
+   if(Dist > 1300000 && Dist < 1500000) {SetActorProperty(0,APROP_Alpha,0.2);}
+   if(Dist > 1100000 && Dist < 1300000) {SetActorProperty(0,APROP_Alpha,0.25);}
+   if(Dist > 900000 && Dist < 1100000)  {SetActorProperty(0,APROP_Alpha,0.3);}
+   
+   SetActorProperty(0,APROP_ScaleX,Dist);
+  }
+  
+  else
+  {
+   SetActorProperty(0,APROP_ScaleX,0.2);
+   SetActorProperty(0,APROP_Alpha,0.0);
+  }
+ }
+}
+
+
+script "ChangeTID" (void)
+{
+ int TID=7000;
+ 
+ while(IsTIDUsed(TID) && TID < 9000)
+ {
+  TID++;
+ }
+ Thing_ChangeTID(0,TID);
+}
+
+
+script "ShadowContainerTID" (void)
+{
+ Thing_ChangeTID(0,9000);
+}

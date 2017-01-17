@@ -1,0 +1,2 @@
+#include "decorate/MAIN.txt"
+#include "decorate/ACTORS.txt"
